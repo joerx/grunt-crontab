@@ -1,0 +1,35 @@
+{
+  "name": "grunt-crontab",
+  "version": "0.0.1",
+  "description": "Grunt plugin to update system crontab",
+  "homepage": "git@github.com:joerx/grunt-crontab.git",
+  "repository": "git@github.com:joerx/grunt-crontab.git",
+  "author": {
+    "name": "Joerg Henning",
+    "email": "henning.joerg@gmail.com",
+    "url": "git@github.com:joerx"
+  },
+  "keywords": [
+    "gruntplugin"
+  ],
+  "main": "Gruntfile.js",
+  "engines": {
+    "node": ">= 0.8.0"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "grunt-contrib-clean": "~0.5.0",
+    "grunt-contrib-jshint": "~0.8.0",
+    "grunt-contrib-nodeunit": "~0.3.0",
+    "grunt": "~0.4.5",
+    "jshint-stylish": "~0.1.5",
+    "load-grunt-tasks": "~0.3.0"
+  },
+  "scripts": {
+    "test": "grunt test"
+  },
+  "dependencies": {
+    "crontab": "~1.0.2",
+    "sinon": "~1.12.2"
+  }
+}

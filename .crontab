@@ -1,0 +1,6 @@
+{
+  "jobs": [
+    {"command": "ls -lha", "schedule": "0 7 * * *", "comment": "A job"},
+    {"command": "bla -lha", "schedule": "0 7 * * *", "comment": "Another job"}
+  ]
+}
