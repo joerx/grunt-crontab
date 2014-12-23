@@ -3,7 +3,7 @@
 var grunt = require('grunt');
 var sinon = require('sinon');
 var path = require('path');
-var gruntCrontab = require('../lib/grunt-crontab')(grunt);
+var gruntCrontab = require('../lib/grunt-crontab');
 
 
 /*
@@ -57,7 +57,7 @@ exports.crontab = {
     test.expect(2);
     mock.jobs.returns(['one', 'two']);
 
-    gruntCrontab.clean(mock);
+    gruntCrontab(grunt).clean(mock);
     test.equal(mock.jobs.callCount, 1);
     test.equal(mock.remove.callCount, 2);
     test.done();
@@ -69,7 +69,7 @@ exports.crontab = {
 
     var regex = new RegExp('^' + namespace);
 
-    gruntCrontab.clean(mock);
+    gruntCrontab(grunt).clean(mock);
     test.deepEqual(mock.jobs.firstCall.args[0], {comment: regex});
     test.done();
   },
@@ -79,7 +79,7 @@ exports.crontab = {
     var backup = grunt.config.get('crontab.cronfile');
     grunt.config.set('crontab.cronfile', './test/fixtures/.mycrontab');
 
-    require('../lib/grunt-crontab')(grunt).create(mock);
+    gruntCrontab(grunt).create(mock);
 
     test.equal(mock.create.callCount, 4);
     test.equal(mock.create.firstCall.args[0], 'pwd');
@@ -95,7 +95,7 @@ exports.crontab = {
     var backup = grunt.config.get('crontab.cronfile');
     grunt.config.set('crontab.cronfile', undefined);
 
-    require('../lib/grunt-crontab')(grunt).create(mock);
+    gruntCrontab(grunt).create(mock);
 
     test.equal(mock.create.callCount, 2);
     test.equal(mock.create.firstCall.args[0], 'ls -lha');
@@ -110,7 +110,7 @@ exports.crontab = {
     var backup = grunt.config.get('crontab.cronfile');
     grunt.config.set('crontab.cronfile', './filedoesnotexistatall');
 
-    testGruntWarn(test, function() {require('../lib/grunt-crontab')(grunt); });
+    testGruntWarn(test, gruntCrontab.bind(null, grunt));
 
     grunt.config.set('crontab.cronfile', backup);
     test.done();
@@ -120,7 +120,7 @@ exports.crontab = {
     var backup = grunt.config.get('crontab.namespace');
     grunt.config.set('crontab.namespace', undefined);
 
-    testGruntWarn(test, function() { require('../lib/grunt-crontab')(grunt); });
+    testGruntWarn(test, gruntCrontab.bind(null, grunt));
 
     grunt.config.set('crontab.namespace', backup);
     test.done();
