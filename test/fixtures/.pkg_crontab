@@ -1,0 +1,5 @@
+{
+  "jobs": [
+    {"command": "cd <%= project.baseDir %> && echo '<%= pkg.name %>'", "schedule": "0 7 * * *", "comment": "A job"}
+  ]
+}

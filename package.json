@@ -2,7 +2,7 @@
   "name": "grunt-crontab",
   "version": "0.0.1",
   "description": "Grunt plugin to update system crontab",
-  "homepage": "git@github.com:joerx/grunt-crontab.git",
+  "homepage": "https://github.com/joerx/grunt-crontab",
   "repository": "git@github.com:joerx/grunt-crontab.git",
   "author": {
     "name": "Joerg Henning",
@@ -30,6 +30,7 @@
   },
   "dependencies": {
     "crontab": "~1.0.2",
-    "sinon": "~1.12.2"
+    "sinon": "~1.12.2",
+    "lodash": "~2.4.1"
   }
 }

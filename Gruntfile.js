@@ -35,13 +35,7 @@ module.exports = function (grunt) {
     // Unit tests.
     nodeunit: {
       tests: ['test/*_test.js']
-    },
-
-    crontab: {
-      namespace: '<%= pkg.name %>',
-      cronfile: './.crontab'
     }
-
   });
 
   // Actually load this plugin's task(s).

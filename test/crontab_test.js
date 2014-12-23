@@ -26,8 +26,9 @@ var gruntCrontab = require('../lib/grunt-crontab');
     test.ifError(value)
 */
 
-var mock;
-var namespace = grunt.config('crontab.namespace');
+var pkg = grunt.file.readJSON('./package.json');
+var namespace = pkg.name;
+var mock = null;
 
 function testGruntWarn(test, fn) {
   test.expect(1);
@@ -47,6 +48,7 @@ exports.crontab = {
     });
     done();
   },
+
   'should register task with grunt': function(test) {
     test.expect(1);
     test.ok(grunt.task.exists('crontab'));
@@ -74,17 +76,19 @@ exports.crontab = {
     test.done();
   },
 
-  'will create cronjobs from file': function(test) {
+  'will substitute placeholders in cronjob file': function(test) {
     test.expect(4);
     var backup = grunt.config.get('crontab.cronfile');
-    grunt.config.set('crontab.cronfile', './test/fixtures/.mycrontab');
+    var dirname = path.normalize(__dirname + '/..');
+
+    grunt.config.set('crontab.cronfile', './test/fixtures/.pkg_crontab');
 
     gruntCrontab(grunt).create(mock);
 
-    test.equal(mock.create.callCount, 4);
-    test.equal(mock.create.firstCall.args[0], 'pwd');
+    test.equal(mock.create.callCount, 1);
+    test.equal(mock.create.firstCall.args[0], 'cd ' + dirname + ' && echo \'' + pkg.name + '\'');
     test.equal(mock.create.firstCall.args[1], '0 7 * * *');
-    test.equal(mock.create.firstCall.args[2], namespace + ' A job');
+    test.equal(mock.create.firstCall.args[2], namespace + ' - A job');
 
     grunt.config.set('crontab.cronfile', backup);
     test.done();
@@ -100,7 +104,7 @@ exports.crontab = {
     test.equal(mock.create.callCount, 2);
     test.equal(mock.create.firstCall.args[0], 'ls -lha');
     test.equal(mock.create.firstCall.args[1], '0 7 * * *');
-    test.equal(mock.create.firstCall.args[2], namespace + ' A job');
+    test.equal(mock.create.firstCall.args[2], namespace + ' - A job');
 
     grunt.config.set('crontab.cronfile', backup);
     test.done();
@@ -113,16 +117,6 @@ exports.crontab = {
     testGruntWarn(test, gruntCrontab.bind(null, grunt));
 
     grunt.config.set('crontab.cronfile', backup);
-    test.done();
-  },
-
-  'will fail if namespace config is missing': function(test) {
-    var backup = grunt.config.get('crontab.namespace');
-    grunt.config.set('crontab.namespace', undefined);
-
-    testGruntWarn(test, gruntCrontab.bind(null, grunt));
-
-    grunt.config.set('crontab.namespace', backup);
     test.done();
   }
 };
