@@ -1,8 +1,10 @@
 'use strict';
 
+var _ = require('lodash');
 var grunt = require('grunt');
 var sinon = require('sinon');
 var path = require('path');
+var crontab = require('crontab');
 var gruntCrontab = require('../lib/grunt-crontab');
 
 
@@ -27,7 +29,6 @@ var gruntCrontab = require('../lib/grunt-crontab');
 */
 
 var pkg = grunt.file.readJSON('./package.json');
-var namespace = pkg.name;
 var mock = null;
 
 function testGruntWarn(test, fn) {
@@ -39,13 +40,21 @@ function testGruntWarn(test, fn) {
 }
 
 exports.crontab = {
-  setUp: function (done) {
+  setUp: function(done) {
+    // Mock for node-crontab
     mock = sinon.stub({
       remove: function(job) {},
       create: function(cmd, schedule, comment) {},
       jobs: function(options) {},
       save: function(cb) {}
     });
+    mock.save.yields(null);
+    sinon.stub(crontab, 'load').yields(null, mock);
+    done();
+  },
+
+  tearDown: function(done) {
+    crontab.load.restore();
     done();
   },
 
@@ -59,64 +68,75 @@ exports.crontab = {
     test.expect(2);
     mock.jobs.returns(['one', 'two']);
 
-    gruntCrontab(grunt).clean(mock);
-    test.equal(mock.jobs.callCount, 1);
-    test.equal(mock.remove.callCount, 2);
-    test.done();
+    gruntCrontab(grunt).setup(function() {
+      test.equal(mock.jobs.callCount, 1);
+      test.equal(mock.remove.callCount, 2);
+      test.done();
+    });
   },
 
   'will use namespace for getting jobs': function(test) {
     test.expect(1);
     mock.jobs.returns(['one', 'two']);
 
-    var regex = new RegExp('^' + namespace);
+    var ns = 'foo_bar_baz';
+    var regex = new RegExp('^' + ns);
 
-    gruntCrontab(grunt).clean(mock);
-    test.deepEqual(mock.jobs.firstCall.args[0], {comment: regex});
-    test.done();
+    gruntCrontab(grunt, {namespace: ns}).setup(function() {
+      test.deepEqual(mock.jobs.firstCall.args[0], {comment: regex});
+      test.done();
+    });
+  },
+
+  'default namespace will contain target, if given': function(test) {
+    test.expect(1);
+    mock.jobs.returns(['one', 'two']);
+
+    var target = 'bla';
+    var regex = new RegExp('^' + pkg.name + '.' + target);
+
+    gruntCrontab(grunt, {target: target}).setup(function() {
+      test.deepEqual(mock.jobs.firstCall.args[0], {comment: regex});
+      test.done();
+    });
   },
 
   'will substitute placeholders in cronjob file': function(test) {
     test.expect(4);
-    var backup = grunt.config.get('crontab.cronfile');
+    mock.jobs.returns([]);
+
+    var ns = 'jabbadabbadoo';
     var dirname = path.normalize(__dirname + '/..');
 
-    grunt.config.set('crontab.cronfile', './test/fixtures/.pkg_crontab');
+    gruntCrontab(grunt, {cronfile: './test/fixtures/.pkg_crontab', namespace: ns}).setup(function() {
+      test.equal(mock.create.callCount, 1);
+      test.equal(mock.create.firstCall.args[0], 'cd ' + dirname + ' && echo \'' + pkg.name + '\'');
+      test.equal(mock.create.firstCall.args[1], '0 7 * * *');
+      test.equal(mock.create.firstCall.args[2], ns + ' - A job');
 
-    gruntCrontab(grunt).create(mock);
-
-    test.equal(mock.create.callCount, 1);
-    test.equal(mock.create.firstCall.args[0], 'cd ' + dirname + ' && echo \'' + pkg.name + '\'');
-    test.equal(mock.create.firstCall.args[1], '0 7 * * *');
-    test.equal(mock.create.firstCall.args[2], namespace + ' - A job');
-
-    grunt.config.set('crontab.cronfile', backup);
-    test.done();
+      test.done();
+    });
   },
 
-  'will create cronjobs from default file': function(test) {
+  'will create cronjobs from file': function(test) {
     test.expect(4);
-    var backup = grunt.config.get('crontab.cronfile');
-    grunt.config.set('crontab.cronfile', undefined);
+    mock.jobs.returns([]);
 
-    gruntCrontab(grunt).create(mock);
+    var ns = 'nameofspace';
 
-    test.equal(mock.create.callCount, 2);
-    test.equal(mock.create.firstCall.args[0], 'ls -lha');
-    test.equal(mock.create.firstCall.args[1], '0 7 * * *');
-    test.equal(mock.create.firstCall.args[2], namespace + ' - A job');
+    gruntCrontab(grunt, {namespace: ns}).setup(function() {
+      test.equal(mock.create.callCount, 2);
+      test.equal(mock.create.firstCall.args[0], 'ls -lha');
+      test.equal(mock.create.firstCall.args[1], '0 7 * * *');
+      test.equal(mock.create.firstCall.args[2], ns + ' - A job');
 
-    grunt.config.set('crontab.cronfile', backup);
-    test.done();
+      test.done();
+    });
   },
 
   'will fail if config file was not found': function(test) {
     var backup = grunt.config.get('crontab.cronfile');
-    grunt.config.set('crontab.cronfile', './filedoesnotexistatall');
-
-    testGruntWarn(test, gruntCrontab.bind(null, grunt));
-
-    grunt.config.set('crontab.cronfile', backup);
+    testGruntWarn(test, gruntCrontab.bind(null, grunt, {cronfile: './filedoesnotexistatall'}));
     test.done();
-  }
+  },
 };

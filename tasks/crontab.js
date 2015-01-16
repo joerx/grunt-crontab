@@ -5,18 +5,11 @@
 
 'use strict';
 
+var gruntCrontab = require('../lib/grunt-crontab');
+
 module.exports = function (grunt) {
-
-  var crontab = require('crontab');
-  var gruntCrontab = require('../lib/grunt-crontab')(grunt);
-
-  grunt.registerTask('crontab', 'Task to update system crontab', function() {
-    var done = this.async();
-    crontab.load(function(err, ct) {
-      gruntCrontab.clean(ct);
-      gruntCrontab.create(ct);
-      ct.save(done);
-    });
-  });
-
+  grunt.registerMultiTask(
+    'crontab',
+    'Task to update system crontab',
+    gruntCrontab.multiTask(grunt));
 };

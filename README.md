@@ -23,7 +23,7 @@ grunt.loadNpmTasks('grunt-crontab');
 ## The "crontab" task
 
 ### Overview
-This task will set up jobs in the system crontab. The jobs are read from file which by default is assumed to be 
+This task will set up jobs in the system crontab. The jobs are read from a file which by default is assumed to be 
 called `.crontab` and located in the same directory as the `Gruntfile`.
 
 In your project's Gruntfile, add a section named `crontab` to the data object passed into `grunt.initConfig()`.
@@ -32,8 +32,13 @@ In your project's Gruntfile, add a section named `crontab` to the data object pa
 grunt.initConfig({
   pkg: grunt.file.readJSON('package.json'),
   crontab: {
-    namespace: '<%= pkg.name %>', // must be set
-    cronfile: './my-crontab' // override if necessary
+    dev: {
+      namespace: '<%= pkg.name %>' + '.dev' , // this would be the default anyway
+      cronfile: './my-crontab-dev' // override, default is '.crontab'
+    },
+    stage: {
+      namespace: 'my-custom-namespace'
+    }
   },
 })
 ```

@@ -31,3 +31,4 @@ node_modules
 # Temp stuff
 npm-debug.log
 tmp
+*.sublime-*
